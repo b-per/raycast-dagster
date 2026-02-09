@@ -5,14 +5,16 @@
   "description": "Browse Dagster assets, materializations, and runs",
   "icon": "icon.png",
   "author": "b-per",
-  "categories": ["Developer Tools"],
+  "categories": [
+    "Developer Tools"
+  ],
   "license": "MIT",
   "commands": [
     {
-      "name": "search-assets",
-      "title": "Search Assets",
+      "name": "list-assets",
+      "title": "List Assets",
       "subtitle": "Dagster",
-      "description": "Search all Dagster assets and view materializations",
+      "description": "List all Dagster assets and view materializations",
       "mode": "view"
     },
     {
@@ -20,6 +22,13 @@
       "title": "List Runs",
       "subtitle": "Dagster",
       "description": "List recent Dagster pipeline runs",
+      "mode": "view"
+    },
+    {
+      "name": "list-jobs",
+      "title": "List Jobs",
+      "subtitle": "Dagster",
+      "description": "List Dagster jobs, manage schedules, and trigger runs",
       "mode": "view"
     }
   ],
@@ -63,13 +72,15 @@
     "@types/react": "^19.0.0",
     "eslint": "^8.51.0",
     "prettier": "^3.0.3",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vitest": "^4.0.18"
   },
   "scripts": {
     "build": "ray build -e dist",
     "dev": "ray develop",
     "fix-lint": "ray lint --fix",
     "lint": "ray lint",
-    "publish": "ray publish"
+    "publish": "ray publish",
+    "test": "vitest run"
   }
 }
