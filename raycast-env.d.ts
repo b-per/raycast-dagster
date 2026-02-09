@@ -22,16 +22,20 @@ type ExtensionPreferences = {
 declare type Preferences = ExtensionPreferences
 
 declare namespace Preferences {
-  /** Preferences accessible in the `search-assets` command */
-  export type SearchAssets = ExtensionPreferences & {}
+  /** Preferences accessible in the `list-assets` command */
+  export type ListAssets = ExtensionPreferences & {}
   /** Preferences accessible in the `list-runs` command */
   export type ListRuns = ExtensionPreferences & {}
+  /** Preferences accessible in the `list-jobs` command */
+  export type ListJobs = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
-  /** Arguments passed to the `search-assets` command */
-  export type SearchAssets = {}
+  /** Arguments passed to the `list-assets` command */
+  export type ListAssets = {}
   /** Arguments passed to the `list-runs` command */
   export type ListRuns = {}
+  /** Arguments passed to the `list-jobs` command */
+  export type ListJobs = {}
 }
 

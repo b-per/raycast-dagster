@@ -47,11 +47,39 @@ export function formatDuration(seconds: number | null): string {
 }
 
 export function statusIcon(status: string): Icon {
-  return status === "SUCCESS" ? Icon.CheckCircle : Icon.XMarkCircle;
+  switch (status) {
+    case "SUCCESS":
+      return Icon.CheckCircle;
+    case "STARTED":
+    case "STARTING":
+      return Icon.CircleProgress;
+    case "QUEUED":
+    case "NOT_STARTED":
+      return Icon.Clock;
+    case "CANCELING":
+    case "CANCELED":
+      return Icon.MinusCircle;
+    default:
+      return Icon.XMarkCircle;
+  }
 }
 
 export function statusColor(status: string): Color {
-  return status === "SUCCESS" ? Color.Green : Color.Red;
+  switch (status) {
+    case "SUCCESS":
+      return Color.Green;
+    case "STARTED":
+    case "STARTING":
+      return Color.Blue;
+    case "QUEUED":
+    case "NOT_STARTED":
+      return Color.SecondaryText;
+    case "CANCELING":
+    case "CANCELED":
+      return Color.Orange;
+    default:
+      return Color.Red;
+  }
 }
 
 export function numericMetadataLabels(materializations: Materialization[]): string[] {
