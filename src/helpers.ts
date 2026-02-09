@@ -1,5 +1,5 @@
 import { Color, Icon } from "@raycast/api";
-import { Materialization } from "./api";
+import { Materialization, AssetGraphNode } from "./api";
 
 // Metadata labels that represent a duration in seconds.
 // Add more entries here if needed.
@@ -80,6 +80,94 @@ export function statusColor(status: string): Color {
     default:
       return Color.Red;
   }
+}
+
+// --- Asset graph traversal ---
+
+export type MaterializeScope = "this" | "upstream" | "downstream" | "upstream+downstream";
+
+export function assetKeyStr(path: string[]): string {
+  return path.join("/");
+}
+
+export function resolveAssetSelection(
+  startPath: string[],
+  scope: MaterializeScope,
+  graphIndex: Map<string, AssetGraphNode>,
+): AssetGraphNode[] {
+  const startKey = assetKeyStr(startPath);
+  const visited = new Set<string>([startKey]);
+  const upQueue: string[] = [];
+  const downQueue: string[] = [];
+
+  if (scope === "upstream" || scope === "upstream+downstream") upQueue.push(startKey);
+  if (scope === "downstream" || scope === "upstream+downstream") downQueue.push(startKey);
+
+  while (upQueue.length > 0) {
+    const key = upQueue.shift()!;
+    const node = graphIndex.get(key);
+    if (!node) continue;
+    for (const dep of node.dependencyKeys) {
+      const depKey = assetKeyStr(dep.path);
+      if (!visited.has(depKey)) {
+        visited.add(depKey);
+        upQueue.push(depKey);
+      }
+    }
+  }
+
+  while (downQueue.length > 0) {
+    const key = downQueue.shift()!;
+    const node = graphIndex.get(key);
+    if (!node) continue;
+    for (const dep of node.dependedByKeys) {
+      const depKey = assetKeyStr(dep.path);
+      if (!visited.has(depKey)) {
+        visited.add(depKey);
+        downQueue.push(depKey);
+      }
+    }
+  }
+
+  return Array.from(visited)
+    .map((k) => graphIndex.get(k))
+    .filter((n): n is AssetGraphNode => n !== undefined && n.isMaterializable && !n.isPartitioned);
+}
+
+export function buildGraphIndex(nodes: AssetGraphNode[]): Map<string, AssetGraphNode> {
+  const index = new Map<string, AssetGraphNode>();
+  for (const node of nodes) {
+    index.set(assetKeyStr(node.assetKey.path), node);
+  }
+  return index;
+}
+
+export interface JobGroup {
+  jobName: string;
+  repositoryName: string;
+  locationName: string;
+  assetKeys: { path: string[] }[];
+}
+
+export function groupByJob(nodes: AssetGraphNode[]): JobGroup[] {
+  const groups = new Map<string, JobGroup>();
+  for (const node of nodes) {
+    const job = node.jobs[0];
+    if (!job) continue;
+    const key = `${job.repository.location.name}/${job.repository.name}/${job.name}`;
+    const group = groups.get(key);
+    if (group) {
+      group.assetKeys.push({ path: node.assetKey.path });
+    } else {
+      groups.set(key, {
+        jobName: job.name,
+        repositoryName: job.repository.name,
+        locationName: job.repository.location.name,
+        assetKeys: [{ path: node.assetKey.path }],
+      });
+    }
+  }
+  return Array.from(groups.values());
 }
 
 export function numericMetadataLabels(materializations: Materialization[]): string[] {

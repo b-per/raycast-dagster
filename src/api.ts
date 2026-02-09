@@ -82,6 +82,17 @@ export interface AssetNode {
   assetMaterializations: { timestamp: string }[];
 }
 
+export interface AssetGraphNode {
+  assetKey: { path: string[] };
+  assetMaterializations: { timestamp: string }[];
+  jobNames: string[];
+  jobs: { name: string; repository: { name: string; location: { name: string } } }[];
+  dependencyKeys: { path: string[] }[];
+  dependedByKeys: { path: string[] }[];
+  isMaterializable: boolean;
+  isPartitioned: boolean;
+}
+
 export interface StepStats {
   status: string;
   startTime: number;
@@ -127,6 +138,26 @@ query lastMaterialization {
         }
       }
     }
+  }
+}`;
+
+const ASSET_GRAPH_QUERY = `
+query assetGraph {
+  assetNodes {
+    assetKey { path }
+    assetMaterializations(limit: 1) { timestamp }
+    jobNames
+    jobs {
+      name
+      repository {
+        name
+        location { name }
+      }
+    }
+    dependencyKeys { path }
+    dependedByKeys { path }
+    isMaterializable
+    isPartitioned
   }
 }`;
 
@@ -322,6 +353,33 @@ interface AssetsResponse {
 export async function fetchAssets(): Promise<AssetNode[]> {
   const data = await graphqlFetch<AssetsResponse>(ASSETS_QUERY);
   return data.assetsOrError.nodes;
+}
+
+interface AssetGraphResponse {
+  assetNodes: AssetGraphNode[];
+}
+
+export async function fetchAssetGraph(): Promise<AssetGraphNode[]> {
+  const data = await graphqlFetch<AssetGraphResponse>(ASSET_GRAPH_QUERY);
+  return data.assetNodes;
+}
+
+export async function materializeAssets(
+  assetKeys: { path: string[] }[],
+  jobName: string,
+  repositoryName: string,
+  repositoryLocationName: string,
+): Promise<string> {
+  const data = await graphqlFetch<LaunchResult>(LAUNCH_RUN_MUTATION, {
+    executionParams: {
+      selector: { jobName, repositoryName, repositoryLocationName, assetSelection: assetKeys },
+    },
+  });
+  if (data.launchRun.__typename === "LaunchRunSuccess" && data.launchRun.run) {
+    return data.launchRun.run.id;
+  }
+  const msg = data.launchRun.message || data.launchRun.errors?.map((e) => e.message).join(", ") || "Unknown error";
+  throw new Error(`Failed to materialize: ${msg}`);
 }
 
 interface AssetMaterializationsResponse {

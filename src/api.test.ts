@@ -2,13 +2,16 @@ import { describe, it, expect, beforeAll } from "vitest";
 
 import {
   fetchAssets,
+  fetchAssetGraph,
   fetchAssetMaterializations,
   fetchRuns,
   fetchRunAssets,
   fetchJobs,
   dagsterRunUrl,
   dagsterJobUrl,
+  type AssetGraphNode,
 } from "./api";
+import { buildGraphIndex, resolveAssetSelection, groupByJob, assetKeyStr } from "./helpers";
 
 beforeAll(() => {
   if (!process.env.SB_DAGSTER_URL) {
@@ -132,6 +135,97 @@ describe("fetchJobs", () => {
     expect(j.repositoryName).toBeTruthy();
     expect(j.schedules).toBeInstanceOf(Array);
     expect(j.runs).toBeInstanceOf(Array);
+  });
+});
+
+describe("fetchAssetGraph", () => {
+  it("returns a non-empty list of asset graph nodes", async () => {
+    const nodes = await fetchAssetGraph();
+    expect(nodes.length).toBeGreaterThan(0);
+  });
+
+  it("each node has graph metadata fields", async () => {
+    const nodes = await fetchAssetGraph();
+    const n = nodes[0];
+    expect(n.assetKey.path).toBeInstanceOf(Array);
+    expect(typeof n.isMaterializable).toBe("boolean");
+    expect(typeof n.isPartitioned).toBe("boolean");
+    expect(n.dependencyKeys).toBeInstanceOf(Array);
+    expect(n.dependedByKeys).toBeInstanceOf(Array);
+    expect(n.jobNames).toBeInstanceOf(Array);
+    expect(n.jobs).toBeInstanceOf(Array);
+  });
+
+  it("materializable assets have at least one job", async () => {
+    const nodes = await fetchAssetGraph();
+    const materializable = nodes.filter((n) => n.isMaterializable);
+    for (const n of materializable.slice(0, 5)) {
+      expect(n.jobs.length).toBeGreaterThan(0);
+      expect(n.jobs[0].repository.name).toBeTruthy();
+      expect(n.jobs[0].repository.location.name).toBeTruthy();
+    }
+  });
+});
+
+describe("resolveAssetSelection", () => {
+  let graphIndex: Map<string, AssetGraphNode>;
+  let nodes: AssetGraphNode[];
+
+  beforeAll(async () => {
+    nodes = await fetchAssetGraph();
+    graphIndex = buildGraphIndex(nodes);
+  });
+
+  it("scope 'this' returns only the target asset", () => {
+    const target = nodes.find((n) => n.isMaterializable && !n.isPartitioned);
+    expect(target).toBeDefined();
+    const selected = resolveAssetSelection(target!.assetKey.path, "this", graphIndex);
+    expect(selected.length).toBe(1);
+    expect(selected[0].assetKey.path).toEqual(target!.assetKey.path);
+  });
+
+  it("scope 'downstream' includes the target plus dependants", () => {
+    const withDeps = nodes.find((n) => n.isMaterializable && !n.isPartitioned && n.dependedByKeys.length > 0);
+    if (!withDeps) return; // skip if no asset has downstream
+    const selected = resolveAssetSelection(withDeps.assetKey.path, "downstream", graphIndex);
+    expect(selected.length).toBeGreaterThan(1);
+    const keys = new Set(selected.map((n) => assetKeyStr(n.assetKey.path)));
+    expect(keys.has(assetKeyStr(withDeps.assetKey.path))).toBe(true);
+  });
+
+  it("scope 'upstream' includes the target plus dependencies", () => {
+    const withDeps = nodes.find((n) => n.isMaterializable && !n.isPartitioned && n.dependencyKeys.length > 0);
+    if (!withDeps) return; // skip if no asset has upstream
+    const selected = resolveAssetSelection(withDeps.assetKey.path, "upstream", graphIndex);
+    expect(selected.length).toBeGreaterThan(1);
+    const keys = new Set(selected.map((n) => assetKeyStr(n.assetKey.path)));
+    expect(keys.has(assetKeyStr(withDeps.assetKey.path))).toBe(true);
+  });
+
+  it("scope 'upstream+downstream' includes both directions", () => {
+    const withBoth = nodes.find(
+      (n) => n.isMaterializable && !n.isPartitioned && n.dependencyKeys.length > 0 && n.dependedByKeys.length > 0,
+    );
+    if (!withBoth) return; // skip if no asset has both
+    const selected = resolveAssetSelection(withBoth.assetKey.path, "upstream+downstream", graphIndex);
+    const upOnly = resolveAssetSelection(withBoth.assetKey.path, "upstream", graphIndex);
+    const downOnly = resolveAssetSelection(withBoth.assetKey.path, "downstream", graphIndex);
+    expect(selected.length).toBeGreaterThanOrEqual(Math.max(upOnly.length, downOnly.length));
+  });
+});
+
+describe("groupByJob", () => {
+  it("groups materializable assets by their job", async () => {
+    const nodes = await fetchAssetGraph();
+    const materializable = nodes.filter((n) => n.isMaterializable && !n.isPartitioned && n.jobs.length > 0);
+    const groups = groupByJob(materializable.slice(0, 10));
+    expect(groups.length).toBeGreaterThan(0);
+    for (const g of groups) {
+      expect(g.jobName).toBeTruthy();
+      expect(g.repositoryName).toBeTruthy();
+      expect(g.locationName).toBeTruthy();
+      expect(g.assetKeys.length).toBeGreaterThan(0);
+    }
   });
 });
 
