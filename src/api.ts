@@ -84,6 +84,7 @@ export interface AssetNode {
 
 export interface AssetGraphNode {
   assetKey: { path: string[] };
+  groupName: string | null;
   assetMaterializations: { timestamp: string }[];
   jobNames: string[];
   jobs: { name: string; repository: { name: string; location: { name: string } } }[];
@@ -149,6 +150,7 @@ const ASSET_GRAPH_QUERY = `
 query assetGraph {
   assetNodes {
     assetKey { path }
+    groupName
     assetMaterializations(limit: 1) { timestamp }
     jobNames
     jobs {
@@ -523,6 +525,74 @@ export async function fetchJobs(): Promise<Job[]> {
     }
   }
   return jobs;
+}
+
+// --- Run Errors ---
+
+export interface PythonError {
+  message: string;
+  className: string | null;
+  stack: string[];
+}
+
+export interface RunErrorEvent {
+  __typename: string;
+  message: string;
+  timestamp: string;
+  stepKey: string | null;
+  error: PythonError | null;
+}
+
+const RUN_ERRORS_QUERY = `
+query runErrors($runId: ID!) {
+  logsForRun(runId: $runId, limit: 1000) {
+    ... on EventConnection {
+      events {
+        __typename
+        ... on ExecutionStepFailureEvent {
+          message
+          timestamp
+          stepKey
+          error {
+            message
+            className
+            stack
+          }
+        }
+        ... on RunFailureEvent {
+          message
+          timestamp
+          error {
+            message
+            className
+            stack
+          }
+        }
+      }
+    }
+  }
+}`;
+
+const ERROR_TYPES = new Set(["ExecutionStepFailureEvent", "RunFailureEvent"]);
+
+interface RunErrorsResponse {
+  logsForRun: {
+    events?: { __typename: string; message?: string; timestamp?: string; stepKey?: string; error?: PythonError }[];
+  };
+}
+
+export async function fetchRunErrors(runId: string): Promise<RunErrorEvent[]> {
+  const data = await graphqlFetch<RunErrorsResponse>(RUN_ERRORS_QUERY, { runId });
+  const events = data.logsForRun.events ?? [];
+  return events
+    .filter((e) => ERROR_TYPES.has(e.__typename))
+    .map((e) => ({
+      __typename: e.__typename,
+      message: e.message ?? "",
+      timestamp: e.timestamp ?? "",
+      stepKey: e.stepKey ?? null,
+      error: e.error ?? null,
+    }));
 }
 
 // --- Mutations ---
