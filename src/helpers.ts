@@ -172,7 +172,6 @@ export function groupByJob(nodes: AssetGraphNode[]): JobGroup[] {
 
 export function numericMetadataLabels(materializations: Materialization[]): string[] {
   const labels = new Set<string>();
-  labels.add("Duration");
   for (const mat of materializations) {
     for (const entry of mat.metadataEntries) {
       if (
@@ -186,10 +185,33 @@ export function numericMetadataLabels(materializations: Materialization[]): stri
   return Array.from(labels);
 }
 
-export function metadataValue(mat: Materialization, label: string): number | null {
-  if (label === "Duration") {
-    return materializationDuration(mat);
+const STRING_TYPES = new Set(["TextMetadataEntry", "PathMetadataEntry", "UrlMetadataEntry", "BoolMetadataEntry"]);
+
+export function stringMetadataLabels(materializations: Materialization[]): string[] {
+  const labels = new Set<string>();
+  for (const mat of materializations) {
+    for (const entry of mat.metadataEntries) {
+      if (STRING_TYPES.has(entry.__typename)) {
+        labels.add(entry.label);
+      }
+    }
   }
+  return Array.from(labels);
+}
+
+export function metadataStringValue(mat: Materialization, label: string): string | null {
+  for (const entry of mat.metadataEntries) {
+    if (entry.label === label) {
+      if (entry.text != null) return entry.text;
+      if (entry.path != null) return entry.path;
+      if (entry.url != null) return entry.url;
+      if (entry.boolValue != null) return String(entry.boolValue);
+    }
+  }
+  return null;
+}
+
+export function metadataValue(mat: Materialization, label: string): number | null {
   for (const entry of mat.metadataEntries) {
     if (entry.label === label) {
       if (entry.__typename === "FloatMetadataEntry" && entry.floatValue != null) {

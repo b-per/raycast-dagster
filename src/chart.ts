@@ -4,7 +4,6 @@ import { join } from "path";
 
 interface ChartOptions {
   title: string;
-  yLabel: string;
   dates: string[];
   values: number[];
   bgColor: string;
@@ -14,7 +13,7 @@ interface ChartOptions {
 }
 
 export function generateChart(opts: ChartOptions): string {
-  const { title, yLabel, dates, values, bgColor, fgColor, lineColor, gridColor } = opts;
+  const { title, dates, values, bgColor, fgColor, lineColor, gridColor } = opts;
 
   const width = 720;
   const height = 400;
@@ -56,7 +55,7 @@ export function generateChart(opts: ChartOptions): string {
 
   // Title
   lines.push(
-    `<text x="${width / 2}" y="30" fill="${fgColor}" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="bold">${escapeXml(title)}</text>`,
+    `<text x="${width / 2}" y="30" fill="${fgColor}" text-anchor="middle" font-family="sans-serif" font-size="20" font-weight="bold">${escapeXml(title)}</text>`,
   );
 
   // Y-axis grid + labels
@@ -68,22 +67,17 @@ export function generateChart(opts: ChartOptions): string {
       `<line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="${gridColor}" stroke-dasharray="4,4"/>`,
     );
     lines.push(
-      `<text x="${padLeft - 8}" y="${y + 4}" fill="${fgColor}" text-anchor="end" font-family="sans-serif" font-size="11">${formatNum(v)}</text>`,
+      `<text x="${padLeft - 8}" y="${y + 6}" fill="${fgColor}" text-anchor="end" font-family="sans-serif" font-size="18">${formatNum(v)}</text>`,
     );
   }
 
-  // Y-axis label
-  lines.push(
-    `<text x="16" y="${padTop + plotH / 2}" fill="${fgColor}" text-anchor="middle" font-family="sans-serif" font-size="12" transform="rotate(-90,16,${padTop + plotH / 2})">${escapeXml(yLabel)}</text>`,
-  );
-
   // Line path
   const points = values.map((v, i) => `${xPos(i).toFixed(1)},${yPos(v).toFixed(1)}`).join(" ");
-  lines.push(`<polyline fill="none" stroke="${lineColor}" stroke-width="2" points="${points}"/>`);
+  lines.push(`<polyline fill="none" stroke="${lineColor}" stroke-width="3" points="${points}"/>`);
 
   // Data points
   for (let i = 0; i < values.length; i++) {
-    lines.push(`<circle cx="${xPos(i).toFixed(1)}" cy="${yPos(values[i]).toFixed(1)}" r="3" fill="${lineColor}"/>`);
+    lines.push(`<circle cx="${xPos(i).toFixed(1)}" cy="${yPos(values[i]).toFixed(1)}" r="4" fill="${lineColor}"/>`);
   }
 
   // X-axis date labels (show ~6 evenly spaced)
@@ -92,7 +86,7 @@ export function generateChart(opts: ChartOptions): string {
     const idx = Math.round((i / (labelCount - 1 || 1)) * (dates.length - 1));
     const x = xPos(idx);
     lines.push(
-      `<text x="${x}" y="${height - padBottom + 20}" fill="${fgColor}" text-anchor="middle" font-family="sans-serif" font-size="10">${escapeXml(dates[idx])}</text>`,
+      `<text x="${x}" y="${height - padBottom + 24}" fill="${fgColor}" text-anchor="middle" font-family="sans-serif" font-size="18">${escapeXml(dates[idx])}</text>`,
     );
   }
 

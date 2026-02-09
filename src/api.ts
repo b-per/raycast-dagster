@@ -104,6 +104,10 @@ export interface MetadataEntry {
   __typename: string;
   floatValue?: number;
   intValue?: number;
+  text?: string;
+  path?: string;
+  url?: string;
+  boolValue?: boolean;
 }
 
 export interface Materialization {
@@ -185,6 +189,18 @@ query myquery($assetKey: AssetKeyInput!) {
           }
           ... on IntMetadataEntry {
             intValue
+          }
+          ... on TextMetadataEntry {
+            text
+          }
+          ... on PathMetadataEntry {
+            path
+          }
+          ... on UrlMetadataEntry {
+            url
+          }
+          ... on BoolMetadataEntry {
+            boolValue
           }
         }
       }
@@ -412,7 +428,7 @@ export async function fetchRuns(): Promise<Run[]> {
   if (data.runsOrError.__typename !== "Runs" || !data.runsOrError.results) {
     return [];
   }
-  return data.runsOrError.results;
+  return data.runsOrError.results.filter((r) => !r.jobName.startsWith("__"));
 }
 
 export interface RunAsset {

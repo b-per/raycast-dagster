@@ -27,12 +27,11 @@ export default function MetadataChart({ assetKey, materializations, label }: Pro
     const isDark = environment.appearance === "dark";
     const path = generateChart({
       title: `${assetKey} — ${label}`,
-      yLabel: label,
       dates,
       values,
       bgColor: isDark ? "#1e1e1e" : "#ffffff",
       fgColor: isDark ? "#cccccc" : "#333333",
-      lineColor: isDark ? "#4fc3f7" : "#1976d2",
+      lineColor: "#7269E4",
       gridColor: isDark ? "#333333" : "#e0e0e0",
     });
 
