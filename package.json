@@ -1,0 +1,75 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "dagster",
+  "title": "Dagster",
+  "description": "Browse Dagster assets, materializations, and runs",
+  "icon": "icon.png",
+  "author": "b-per",
+  "categories": ["Developer Tools"],
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "search-assets",
+      "title": "Search Assets",
+      "subtitle": "Dagster",
+      "description": "Search all Dagster assets and view materializations",
+      "mode": "view"
+    },
+    {
+      "name": "list-runs",
+      "title": "List Runs",
+      "subtitle": "Dagster",
+      "description": "List recent Dagster pipeline runs",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "type": "textfield",
+      "name": "dagsterUrl",
+      "title": "Dagster URL",
+      "description": "Base URL of your Dagster instance (e.g. https://dagster.example.com)",
+      "required": true
+    },
+    {
+      "type": "textfield",
+      "name": "extraHeaders",
+      "title": "Extra Headers",
+      "description": "JSON object of extra HTTP headers (e.g. {\"CF-Access-Client-Id\": \"...\"})",
+      "required": false
+    },
+    {
+      "type": "textfield",
+      "name": "username",
+      "title": "Username",
+      "description": "Basic auth username (optional)",
+      "required": false
+    },
+    {
+      "type": "password",
+      "name": "password",
+      "title": "Password",
+      "description": "Basic auth password (optional)",
+      "required": false
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "latest",
+    "@raycast/utils": "^1.4.7"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^1.0.6",
+    "@types/node": "20.8.10",
+    "@types/react": "^19.0.0",
+    "eslint": "^8.51.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2"
+  },
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "publish": "ray publish"
+  }
+}
