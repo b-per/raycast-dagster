@@ -1,4 +1,4 @@
-import { ActionPanel, Action, List, Icon, getPreferenceValues } from "@raycast/api";
+import { ActionPanel, Action, List, Icon, Keyboard, getPreferenceValues } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
 import { fetchRunAssets, dagsterRunUrl, type Preferences } from "../api";
 import { formatTimestamp } from "../helpers";
@@ -17,6 +17,7 @@ export default function RunAssets({ runId, jobName }: Props) {
 
   return (
     <List isLoading={isLoading} navigationTitle={`${jobName} — Assets`} searchBarPlaceholder="Filter assets...">
+      <List.EmptyView title="No Assets" description="No assets found for this run." />
       {assets?.map((asset, idx) => {
         const assetPath = asset.assetKey;
         const assetKey = assetPath.join(".");
@@ -41,9 +42,17 @@ export default function RunAssets({ runId, jobName }: Props) {
                   icon={Icon.LineChart}
                   target={<AssetMetrics assetPath={assetPath} assetKey={assetKey} />}
                 />
-                <Action.OpenInBrowser title="Open Asset in Dagster" url={assetUrl} />
+                <Action.OpenInBrowser
+                  title="Open Asset in Dagster"
+                  url={assetUrl}
+                  shortcut={Keyboard.Shortcut.Common.Open}
+                />
                 <Action.OpenInBrowser title="Open Run in Dagster" url={dagsterRunUrl(runId)} />
-                <Action.CopyToClipboard title="Copy Asset Key" content={assetKey} />
+                <Action.CopyToClipboard
+                  title="Copy Asset Key"
+                  content={assetKey}
+                  shortcut={Keyboard.Shortcut.Common.Copy}
+                />
               </ActionPanel>
             }
           />

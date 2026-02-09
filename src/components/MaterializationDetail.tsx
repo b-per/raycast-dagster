@@ -1,4 +1,4 @@
-import { ActionPanel, Action, Detail } from "@raycast/api";
+import { ActionPanel, Action, Detail, Keyboard } from "@raycast/api";
 import { Materialization, MetadataEntry, dagsterRunUrl } from "../api";
 import {
   formatTimestamp,
@@ -8,6 +8,10 @@ import {
   statusIcon,
   statusColor,
 } from "../helpers";
+
+function escapeMd(s: string): string {
+  return s.replace(/\|/g, "\\|");
+}
 
 function entryValue(entry: MetadataEntry): string | null {
   if (entry.__typename === "FloatMetadataEntry" && entry.floatValue != null) return formatNumber(entry.floatValue);
@@ -37,7 +41,7 @@ export default function MaterializationDetail({ materialization: mat }: Props) {
     lines.push("| Metadata | Value |");
     lines.push("|---|---|");
     for (const { label, value } of displayEntries) {
-      lines.push(`| ${label} | ${value} |`);
+      lines.push(`| ${escapeMd(label)} | ${escapeMd(value)} |`);
     }
   }
 
@@ -60,7 +64,11 @@ export default function MaterializationDetail({ materialization: mat }: Props) {
       actions={
         <ActionPanel>
           <Action.OpenInBrowser title="Open Run in Dagster" url={dagsterRunUrl(mat.runId)} />
-          <Action.CopyToClipboard title="Copy Run URL" content={dagsterRunUrl(mat.runId)} />
+          <Action.CopyToClipboard
+            title="Copy Run URL"
+            content={dagsterRunUrl(mat.runId)}
+            shortcut={Keyboard.Shortcut.Common.Copy}
+          />
         </ActionPanel>
       }
     />

@@ -1,4 +1,4 @@
-import { ActionPanel, Action, List, Icon } from "@raycast/api";
+import { ActionPanel, Action, List, Icon, Keyboard } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
 import { fetchAssetMaterializations, dagsterRunUrl } from "../api";
 import { formatTimestamp, materializationDuration, formatDuration, statusIcon, statusColor } from "../helpers";
@@ -14,6 +14,7 @@ export default function AssetMaterializations({ assetPath, assetKey }: Props) {
 
   return (
     <List isLoading={isLoading} navigationTitle={assetKey} searchBarPlaceholder="Filter materializations...">
+      <List.EmptyView title="No Materializations" description="No materializations found for this asset." />
       {materializations?.map((mat, idx) => {
         const duration = materializationDuration(mat);
         const status = mat.stepStats?.status ?? "UNKNOWN";
@@ -33,9 +34,22 @@ export default function AssetMaterializations({ assetPath, assetKey }: Props) {
                   icon={Icon.Sidebar}
                   target={<MaterializationDetail materialization={mat} />}
                 />
-                <Action.OpenInBrowser title="Open Run in Dagster" url={dagsterRunUrl(mat.runId)} />
-                <Action.CopyToClipboard title="Copy Run URL" content={dagsterRunUrl(mat.runId)} />
-                <Action title="Refresh" icon={Icon.ArrowClockwise} onAction={revalidate} />
+                <Action.OpenInBrowser
+                  title="Open Run in Dagster"
+                  url={dagsterRunUrl(mat.runId)}
+                  shortcut={Keyboard.Shortcut.Common.Open}
+                />
+                <Action.CopyToClipboard
+                  title="Copy Run URL"
+                  content={dagsterRunUrl(mat.runId)}
+                  shortcut={Keyboard.Shortcut.Common.Copy}
+                />
+                <Action
+                  title="Refresh"
+                  icon={Icon.ArrowClockwise}
+                  onAction={revalidate}
+                  shortcut={Keyboard.Shortcut.Common.Refresh}
+                />
               </ActionPanel>
             }
           />

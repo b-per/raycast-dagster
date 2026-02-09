@@ -24,6 +24,9 @@ export default function AssetMetrics({ assetPath, assetKey }: Props) {
 
   return (
     <List isLoading={isLoading} navigationTitle={`${assetKey} — Metrics`}>
+      {numericLabels.length === 0 && stringLabels.length === 0 && !isLoading && (
+        <List.EmptyView title="No Metrics" description="No metadata entries found for this asset." />
+      )}
       {numericLabels.length > 0 && (
         <List.Section title="Numeric">
           {numericLabels.map((label) => {

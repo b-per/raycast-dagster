@@ -44,6 +44,7 @@ export default function JobSchedules({ jobName, schedules: initialSchedules, rep
 
   return (
     <List navigationTitle={`${jobName} — Schedules`}>
+      <List.EmptyView title="No Schedules" description="No schedules configured for this job." />
       {schedules.map((schedule) => {
         const isRunning = schedule.scheduleState.status === "RUNNING";
         return (

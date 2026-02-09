@@ -18,7 +18,7 @@ export default function MetadataTable({ assetKey, materializations, label }: Pro
     for (const mat of materializations) {
       const val = metadataStringValue(mat, label);
       if (val !== null) {
-        lines.push(`| ${formatTimestamp(mat.timestamp, true)} | ${val} |`);
+        lines.push(`| ${formatTimestamp(mat.timestamp, true)} | ${val.replace(/\|/g, "\\|")} |`);
       }
     }
 
