@@ -6,6 +6,7 @@ import {
   fetchAssetMaterializations,
   fetchRuns,
   fetchRunAssets,
+  fetchRunErrors,
   fetchJobs,
   dagsterRunUrl,
   dagsterJobUrl,
@@ -64,6 +65,22 @@ describe("fetchAssetMaterializations", () => {
     expect(m.metadataEntries).toBeInstanceOf(Array);
   });
 
+  it("metadata entries include string types", async () => {
+    const mats = await fetchAssetMaterializations(assetPath);
+    const allTypes = new Set(mats.flatMap((m) => m.metadataEntries.map((e) => e.__typename)));
+    // At least one type should be present
+    expect(allTypes.size).toBeGreaterThan(0);
+    // Verify string-type fields are returned when present
+    for (const m of mats) {
+      for (const e of m.metadataEntries) {
+        if (e.__typename === "TextMetadataEntry") expect(typeof e.text).toBe("string");
+        if (e.__typename === "PathMetadataEntry") expect(typeof e.path).toBe("string");
+        if (e.__typename === "UrlMetadataEntry") expect(typeof e.url).toBe("string");
+        if (e.__typename === "BoolMetadataEntry") expect(typeof e.boolValue).toBe("boolean");
+      }
+    }
+  });
+
   it("returns empty array for a nonexistent asset", async () => {
     const mats = await fetchAssetMaterializations(["nonexistent_asset_xyz_12345"]);
     expect(mats).toEqual([]);
@@ -83,6 +100,13 @@ describe("fetchRuns", () => {
     expect(r.status).toBeTruthy();
     expect(r.jobName).toBeTruthy();
     expect(typeof r.startTime === "number" || r.startTime === null).toBe(true);
+  });
+
+  it("filters out dunder jobs from runs", async () => {
+    const runs = await fetchRuns();
+    for (const r of runs) {
+      expect(r.jobName.startsWith("__")).toBe(false);
+    }
   });
 });
 
@@ -156,6 +180,13 @@ describe("fetchAssetGraph", () => {
     expect(n.jobs).toBeInstanceOf(Array);
   });
 
+  it("each node has a groupName", async () => {
+    const nodes = await fetchAssetGraph();
+    for (const n of nodes.slice(0, 5)) {
+      expect(typeof n.groupName === "string" || n.groupName === null).toBe(true);
+    }
+  });
+
   it("materializable assets have at least one job", async () => {
     const nodes = await fetchAssetGraph();
     const materializable = nodes.filter((n) => n.isMaterializable);
@@ -225,6 +256,51 @@ describe("groupByJob", () => {
       expect(g.repositoryName).toBeTruthy();
       expect(g.locationName).toBeTruthy();
       expect(g.assetKeys.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("fetchRunErrors", () => {
+  it("returns an array for a successful run (likely empty)", async () => {
+    const runs = await fetchRuns();
+    const success = runs.find((r) => r.status === "SUCCESS");
+    expect(success).toBeDefined();
+    const errors = await fetchRunErrors(success!.id);
+    expect(errors).toBeInstanceOf(Array);
+    expect(errors.length).toBe(0);
+  });
+
+  it("returns error events for a failed run", async () => {
+    const runs = await fetchRuns();
+    const failed = runs.find((r) => r.status === "FAILURE");
+    if (!failed) return; // skip if no failed runs exist
+    const errors = await fetchRunErrors(failed.id);
+    expect(errors.length).toBeGreaterThan(0);
+    const e = errors[0];
+    expect(e.__typename).toBeTruthy();
+    expect(typeof e.message).toBe("string");
+    expect(typeof e.timestamp).toBe("string");
+  });
+
+  it("error events have error details when present", async () => {
+    const runs = await fetchRuns();
+    const failed = runs.find((r) => r.status === "FAILURE");
+    if (!failed) return;
+    const errors = await fetchRunErrors(failed.id);
+    const withError = errors.find((e) => e.error !== null);
+    if (!withError) return;
+    expect(typeof withError.error!.message).toBe("string");
+    expect(withError.error!.stack).toBeInstanceOf(Array);
+  });
+
+  it("only returns known error event types", async () => {
+    const runs = await fetchRuns();
+    const failed = runs.find((r) => r.status === "FAILURE");
+    if (!failed) return;
+    const errors = await fetchRunErrors(failed.id);
+    const validTypes = new Set(["ExecutionStepFailureEvent", "RunFailureEvent"]);
+    for (const e of errors) {
+      expect(validTypes.has(e.__typename)).toBe(true);
     }
   });
 });
