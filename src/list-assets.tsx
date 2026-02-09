@@ -3,6 +3,7 @@ import {
   Action,
   List,
   Icon,
+  Keyboard,
   getPreferenceValues,
   showToast,
   Toast,
@@ -10,7 +11,7 @@ import {
   Alert,
 } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { fetchAssetGraph, materializeAssets, dagsterRunUrl, type Preferences } from "./api";
 import { formatTimestamp, buildGraphIndex, resolveAssetSelection, groupByJob, type MaterializeScope } from "./helpers";
 import AssetMaterializations from "./components/AssetMaterializations";
@@ -28,6 +29,17 @@ export default function ListAssets() {
   const prefs = getPreferenceValues<Preferences>();
   const baseUrl = prefs.dagsterUrl.replace(/\/+$/, "");
   const graphIndex = useMemo(() => buildGraphIndex(assets ?? []), [assets]);
+  const [groupFilter, setGroupFilter] = useState("All");
+
+  const groups = useMemo(() => {
+    const set = new Set<string>();
+    for (const a of assets ?? []) {
+      if (a.groupName) set.add(a.groupName);
+    }
+    return Array.from(set).sort();
+  }, [assets]);
+
+  const filtered = groupFilter === "All" ? assets : assets?.filter((a) => a.groupName === groupFilter);
 
   async function handleMaterialize(assetPath: string[], scope: MaterializeScope) {
     const selected = resolveAssetSelection(assetPath, scope, graphIndex);
@@ -72,8 +84,24 @@ export default function ListAssets() {
   }
 
   return (
-    <List isLoading={isLoading} searchBarPlaceholder="Filter assets...">
-      {assets?.map((asset) => {
+    <List
+      isLoading={isLoading}
+      searchBarPlaceholder="Filter assets..."
+      searchBarAccessory={
+        groups.length > 1 ? (
+          <List.Dropdown tooltip="Asset Group" value={groupFilter} onChange={setGroupFilter}>
+            <List.Dropdown.Item title="All Groups" value="All" />
+            <List.Dropdown.Section>
+              {groups.map((g) => (
+                <List.Dropdown.Item key={g} title={g} value={g} />
+              ))}
+            </List.Dropdown.Section>
+          </List.Dropdown>
+        ) : undefined
+      }
+    >
+      <List.EmptyView title="No Assets" description="No assets match the selected filter." />
+      {filtered?.map((asset) => {
         const assetPath = asset.assetKey.path;
         const assetKey = assetPath.join(".");
         const lastMat = asset.assetMaterializations[0];
@@ -86,6 +114,7 @@ export default function ListAssets() {
             icon={Icon.Layers}
             title={assetKey}
             subtitle={lastMat ? formatTimestamp(lastMat.timestamp, true) : ""}
+            accessories={asset.groupName ? [{ tag: asset.groupName }] : []}
             actions={
               <ActionPanel>
                 <Action.Push
@@ -122,7 +151,7 @@ export default function ListAssets() {
                     />
                   </ActionPanel.Section>
                 )}
-                <Action.OpenInBrowser title="Open in Dagster" url={assetUrl} />
+                <Action.OpenInBrowser title="Open in Dagster" url={assetUrl} shortcut={Keyboard.Shortcut.Common.Open} />
               </ActionPanel>
             }
           />
