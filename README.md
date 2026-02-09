@@ -25,6 +25,27 @@ View recent pipeline runs with status, duration, and drill-down to see which ass
 
 Browse jobs grouped by code location. Launch new runs, retry from failure, and manage schedules (start/stop).
 
+## AI Tools
+
+This extension provides AI tools that let you query Dagster from Raycast AI Chat. Type `@Dagster` in AI Chat followed by a question.
+
+| Tool | Description |
+|---|---|
+| Get Assets | List assets filtered by name or group |
+| Get Runs | Fetch recent runs filtered by status or job name |
+| Get Run Errors | Fetch step failures and stack traces for a run |
+| Get Asset Materializations | Fetch materialization history with metadata |
+| Get Jobs | Fetch jobs with schedules and last run status |
+| Materialize Asset | Trigger materialization with scope selection (requires confirmation) |
+| Launch Job | Launch a job run (requires confirmation) |
+
+**Example prompts:**
+
+- "What are my recent failed runs?"
+- "Why did the last run fail?"
+- "When was fct_listings last materialized?"
+- "Materialize fct_listings and downstream"
+
 ## Configuration
 
 | Preference | Required | Description |

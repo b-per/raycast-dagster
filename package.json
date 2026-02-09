@@ -32,6 +32,43 @@
       "mode": "view"
     }
   ],
+  "tools": [
+    {
+      "name": "get-assets",
+      "title": "Get Assets",
+      "description": "Fetch Dagster assets with group and last materialization time, optionally filtered by name or group"
+    },
+    {
+      "name": "get-runs",
+      "title": "Get Runs",
+      "description": "Fetch recent Dagster runs, optionally filtered by status or job name"
+    },
+    {
+      "name": "get-run-errors",
+      "title": "Get Run Errors",
+      "description": "Fetch error events (step failures, run failures) for a specific Dagster run"
+    },
+    {
+      "name": "get-asset-materializations",
+      "title": "Get Asset Materializations",
+      "description": "Fetch materialization history for a Dagster asset including timestamps, status, duration, and metadata"
+    },
+    {
+      "name": "get-jobs",
+      "title": "Get Jobs",
+      "description": "Fetch Dagster jobs with their schedules and last run status"
+    },
+    {
+      "name": "materialize-asset",
+      "title": "Materialize Asset",
+      "description": "Trigger materialization of a Dagster asset, optionally including upstream or downstream dependencies"
+    },
+    {
+      "name": "launch-job",
+      "title": "Launch Job",
+      "description": "Launch a Dagster job run"
+    }
+  ],
   "preferences": [
     {
       "type": "textfield",
