@@ -1,4 +1,4 @@
-import { ActionPanel, Action, List, Icon, Color, showToast, Toast, confirmAlert, Alert } from "@raycast/api";
+import { ActionPanel, Action, List, Icon, Color, Keyboard, showToast, Toast, confirmAlert, Alert } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
 import { useState, useMemo } from "react";
 import { fetchJobs, launchRun, reexecuteRun, dagsterRunUrl, dagsterJobUrl, type Job } from "./api";
@@ -99,6 +99,7 @@ export default function ListJobs() {
         ) : undefined
       }
     >
+      <List.EmptyView title="No Jobs" description="No jobs found in your Dagster instance." />
       {Array.from(grouped.entries()).map(([location, locationJobs]) => (
         <List.Section key={location} title={location}>
           {locationJobs.map((job) => {
@@ -131,6 +132,20 @@ export default function ListJobs() {
                 accessories={accessories}
                 actions={
                   <ActionPanel>
+                    <ActionPanel.Section>
+                      <Action.OpenInBrowser
+                        title="Open Job in Dagster"
+                        url={dagsterJobUrl(job.locationName, job.name)}
+                        shortcut={Keyboard.Shortcut.Common.Open}
+                      />
+                      {lastRun && <Action.OpenInBrowser title="Open Last Run" url={dagsterRunUrl(lastRun.id)} />}
+                      <Action
+                        title="Refresh"
+                        icon={Icon.ArrowClockwise}
+                        onAction={revalidate}
+                        shortcut={Keyboard.Shortcut.Common.Refresh}
+                      />
+                    </ActionPanel.Section>
                     <ActionPanel.Section title="Run">
                       <Action title="Launch New Run" icon={Icon.Play} onAction={() => handleLaunch(job)} />
                       <Action
@@ -143,14 +158,6 @@ export default function ListJobs() {
                         icon={Icon.Redo}
                         onAction={() => handleReexecute(job, "FROM_FAILURE")}
                       />
-                    </ActionPanel.Section>
-                    <ActionPanel.Section>
-                      <Action.OpenInBrowser
-                        title="Open Job in Dagster"
-                        url={dagsterJobUrl(job.locationName, job.name)}
-                      />
-                      {lastRun && <Action.OpenInBrowser title="Open Last Run" url={dagsterRunUrl(lastRun.id)} />}
-                      <Action title="Refresh" icon={Icon.ArrowClockwise} onAction={revalidate} />
                     </ActionPanel.Section>
                     {job.schedules.length > 0 && (
                       <ActionPanel.Section title="Schedules">
