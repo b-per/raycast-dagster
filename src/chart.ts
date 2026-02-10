@@ -96,19 +96,19 @@ export function generateChart(opts: ChartOptions): string {
 
 function writeSvg(svg: string, name: string): string {
   const dir = environment.supportPath;
-  // Clean up old chart SVGs
+  const slug = name.replace(/[^a-zA-Z0-9]+/g, "_").toLowerCase();
+  const prefix = `chart_${slug}_`;
+  // Remove previous versions of this specific chart to bust Raycast image cache
   try {
     for (const f of readdirSync(dir)) {
-      if (f.startsWith("chart_") && f.endsWith(".svg")) {
+      if (f.startsWith(prefix) && f.endsWith(".svg")) {
         unlinkSync(join(dir, f));
       }
     }
   } catch {
     // ignore if dir doesn't exist yet
   }
-
-  const slug = name.replace(/[^a-zA-Z0-9]+/g, "_").toLowerCase();
-  const path = join(dir, `chart_${slug}.svg`);
+  const path = join(dir, `${prefix}${Date.now()}.svg`);
   writeFileSync(path, svg, "utf-8");
   return path;
 }
