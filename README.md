@@ -4,7 +4,7 @@ Browse and interact with your [Dagster](https://dagster.io) instance from Raycas
 
 ## Commands
 
-### List Assets
+### Assets
 
 Browse all assets, view materialization history and metadata charts, and trigger materializations.
 
@@ -17,17 +17,26 @@ Browse all assets, view materialization history and metadata charts, and trigger
 
 Assets are grouped by job automatically. If the selected assets span multiple jobs, one run is launched per job.
 
-### List Runs
+### Recent Runs
 
-View recent pipeline runs with status, duration, and drill-down to see which assets were materialized in each run.
+View recent pipeline runs with status, duration, and drill-down to see errors and which assets were materialized in each run.
 
-### List Jobs
+### Jobs
 
 Browse jobs grouped by code location. Launch new runs, retry from failure, and manage schedules (start/stop).
 
+### Run Status
+
+Background command that shows the status of the last 10 runs as emoji icons directly in Raycast search. Refreshes every 10 minutes.
+
+- 🌿 Success
+- 🔥 Failure
+- 🌻 Running / Queued
+- 🍂 Canceled
+
 ## AI Tools
 
-This extension provides AI tools that let you query Dagster from Raycast AI Chat. Type `@Dagster` in AI Chat followed by a question.
+This extension provides AI tools that let you query Dagster from Raycast AI Chat. Type `@dagster` in AI Chat followed by a question.
 
 | Tool | Description |
 |---|---|

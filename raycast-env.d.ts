@@ -28,6 +28,8 @@ declare namespace Preferences {
   export type ListRuns = ExtensionPreferences & {}
   /** Preferences accessible in the `list-jobs` command */
   export type ListJobs = ExtensionPreferences & {}
+  /** Preferences accessible in the `run-status` command */
+  export type RunStatus = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
@@ -37,5 +39,7 @@ declare namespace Arguments {
   export type ListRuns = {}
   /** Arguments passed to the `list-jobs` command */
   export type ListJobs = {}
+  /** Arguments passed to the `run-status` command */
+  export type RunStatus = {}
 }
 

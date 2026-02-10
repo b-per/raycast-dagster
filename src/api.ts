@@ -11,7 +11,7 @@ export interface Preferences {
 
 // --- GraphQL Client ---
 
-async function graphqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
+export async function graphqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
   const prefs = getPreferenceValues<Preferences>();
   const url = `${prefs.dagsterUrl.replace(/\/+$/, "")}/graphql`;
 
