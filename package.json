@@ -12,23 +12,23 @@
   "commands": [
     {
       "name": "list-assets",
-      "title": "List Assets",
+      "title": "Assets",
       "subtitle": "Dagster",
-      "description": "List all Dagster assets and view materializations",
+      "description": "Browse Dagster assets and view materializations",
       "mode": "view"
     },
     {
       "name": "list-runs",
-      "title": "List Runs",
+      "title": "Recent Runs",
       "subtitle": "Dagster",
-      "description": "List recent Dagster pipeline runs",
+      "description": "View recent Dagster pipeline runs",
       "mode": "view"
     },
     {
       "name": "list-jobs",
-      "title": "List Jobs",
+      "title": "Jobs",
       "subtitle": "Dagster",
-      "description": "List Dagster jobs, manage schedules, and trigger runs",
+      "description": "Browse Dagster jobs, manage schedules, and trigger runs",
       "mode": "view"
     }
   ],

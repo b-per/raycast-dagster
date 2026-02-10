@@ -20,7 +20,7 @@ export function generateChart(opts: ChartOptions): string {
   const padLeft = 70;
   const padRight = 30;
   const padTop = 50;
-  const padBottom = 60;
+  const padBottom = 90;
 
   const plotW = width - padLeft - padRight;
   const plotH = height - padTop - padBottom;
@@ -86,7 +86,7 @@ export function generateChart(opts: ChartOptions): string {
     const idx = Math.round((i / (labelCount - 1 || 1)) * (dates.length - 1));
     const x = xPos(idx);
     lines.push(
-      `<text x="${x}" y="${height - padBottom + 24}" fill="${fgColor}" text-anchor="middle" font-family="sans-serif" font-size="18">${escapeXml(dates[idx])}</text>`,
+      `<text x="${x}" y="${height - padBottom + 20}" fill="${fgColor}" text-anchor="end" font-family="sans-serif" font-size="18" transform="rotate(-45 ${x} ${height - padBottom + 20})">${escapeXml(dates[idx])}</text>`,
     );
   }
 
